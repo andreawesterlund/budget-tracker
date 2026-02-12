@@ -63,7 +63,7 @@
     }
     .save-btn:active { transform: scale(0.98); }
 
-    /* TOGGLE SWITCH STYLE */
+    /* UPDATED TOGGLE STYLE */
     .toggle-container {
       display: flex;
       align-items: center;
@@ -76,10 +76,10 @@
       border-radius: 50px;
       width: 100%;
       box-sizing: border-box;
+      cursor: pointer; /* Makes it feel clickable */
     }
-    .toggle-label { margin: 0; font-size: 12px; font-weight: 800; }
+    .toggle-label { margin: 0; font-size: 12px; font-weight: 800; pointer-events: none; }
     
-    /* Standard Checkbox styled simply */
     input[type="checkbox"] {
       width: 25px;
       height: 25px;
@@ -163,10 +163,10 @@
     <label>Category</label>
     <select id="cat"><option>Loading...</option></select>
 
-    <div class="toggle-container">
+    <label class="toggle-container">
       <input type="checkbox" id="check-bal">
-      <div class="toggle-label">I CHECKED MY BALANCE FIRST</div>
-    </div>
+      <div class="toggle-label">Did you check your balance?</div>
+    </label>
 
     <button class="save-btn" onclick="submitTransaction()">Save</button>
   </div>
@@ -246,7 +246,7 @@
         appData = data;
         renderAll();
       } catch(e) {
-        // Silent error or basic alert
+        // Silent error
       }
     }
 
@@ -320,7 +320,7 @@
       const amt = document.getElementById('amt').value;
       const cat = document.getElementById('cat').value;
       const desc = document.getElementById('desc').value;
-      const checked = document.getElementById('check-bal').checked; // Get toggle value
+      const checked = document.getElementById('check-bal').checked; 
 
       if (!amt || !cat) return alert("Missing info!");
 
@@ -334,7 +334,7 @@
           amount: amt,
           category: cat,
           description: desc,
-          checkedBalance: checked // Send to backend
+          checkedBalance: checked
         }
       };
       
@@ -343,7 +343,7 @@
       btn.innerText = "SAVE";
       document.getElementById('amt').value = "";
       document.getElementById('desc').value = "";
-      document.getElementById('check-bal').checked = false; // Reset toggle
+      document.getElementById('check-bal').checked = false; 
       alert("Saved!");
       fetchData(); 
     }
