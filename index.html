@@ -2,13 +2,12 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Budget</title>
+  <title>Budget v2</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
   
   <link rel="apple-touch-icon" href="icon.png">
-  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
   <style>
@@ -63,30 +62,53 @@
     }
     .save-btn:active { transform: scale(0.98); }
 
-    /* UPDATED TOGGLE STYLE */
-    .toggle-container {
+    /* --- NEW CUSTOM IOS SWITCH --- */
+    .switch-wrapper {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      background: #FFF;
-      padding: 10px;
-      border: 2px solid #000;
-      border-radius: 50px;
-      width: 100%;
-      box-sizing: border-box;
-      cursor: pointer; /* Makes it feel clickable */
-    }
-    .toggle-label { margin: 0; font-size: 12px; font-weight: 800; pointer-events: none; }
-    
-    input[type="checkbox"] {
-      width: 25px;
-      height: 25px;
-      margin: 0;
-      accent-color: var(--trend-green);
+      gap: 15px;
+      margin-top: 30px; /* More space */
       cursor: pointer;
     }
+    
+    .switch-bg {
+      width: 55px;
+      height: 32px;
+      background-color: #DDD; /* Gray when off */
+      border-radius: 30px;
+      position: relative;
+      transition: background-color 0.3s ease;
+      border: 2px solid #000; /* Matches app style */
+    }
+
+    .switch-circle {
+      width: 26px;
+      height: 26px;
+      background-color: #FFF;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      border: 1px solid #000;
+    }
+
+    .switch-label {
+      font-size: 12px; 
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    /* Active State (Added by JS) */
+    .switch-wrapper.active .switch-bg {
+      background-color: var(--trend-green);
+    }
+    .switch-wrapper.active .switch-circle {
+      transform: translateX(23px);
+    }
+    /* ----------------------------- */
 
     /* NAV BAR */
     .nav-bar {
@@ -163,10 +185,12 @@
     <label>Category</label>
     <select id="cat"><option>Loading...</option></select>
 
-    <label class="toggle-container">
-      <input type="checkbox" id="check-bal">
-      <div class="toggle-label">Did you check your balance?</div>
-    </label>
+    <div class="switch-wrapper" id="balance-toggle" onclick="toggleSwitch()">
+      <div class="switch-bg">
+        <div class="switch-circle"></div>
+      </div>
+      <div class="switch-label">Did you check your balance?</div>
+    </div>
 
     <button class="save-btn" onclick="submitTransaction()">Save</button>
   </div>
@@ -214,7 +238,7 @@
   <script>
     // ******************************************************
     // PASTE YOUR GOOGLE DEPLOYMENT URL HERE:
-    const API_URL = "https://script.google.com/macros/s/AKfycbxU6OSJia6Gd_3veeJ4Eeb3sgGZXI6VIUoxyxWsbZyu1acYOyC8fNvpV_HZ6BMhmVrrWQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwlIDKFtXxWbLB2DWYaTOJCwJ6Wm2nEvqli0gmFYIWpZtxm36dvklvUp0OkPH3MacAFLA/exec";
     // ******************************************************
 
     let currentMonthOffset = 0;
@@ -230,6 +254,14 @@
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       if(screenId === 'spending' && !document.getElementById('cat').value) fetchData();
+    }
+
+    // --- NEW TOGGLE FUNCTION ---
+    function toggleSwitch() {
+      const el = document.getElementById('balance-toggle');
+      el.classList.toggle('active');
+      // Minimal vibration for feedback if supported
+      if(navigator.vibrate) navigator.vibrate(10);
     }
 
     async function fetchData() {
@@ -283,9 +315,7 @@
       if(appData.history.length === 0) histDiv.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>No transactions</div>";
       
       appData.history.forEach(t => {
-        // Logic for the eyeball
         const eyeIcon = (t.checkedBalance === true || t.checkedBalance === "true") ? "👁️ " : "";
-        
         histDiv.innerHTML += `
           <div class="history-item">
             <div class="hist-amt">$${t.amount}</div>
@@ -320,7 +350,10 @@
       const amt = document.getElementById('amt').value;
       const cat = document.getElementById('cat').value;
       const desc = document.getElementById('desc').value;
-      const checked = document.getElementById('check-bal').checked; 
+      
+      // READ CUSTOM TOGGLE STATE
+      const toggleEl = document.getElementById('balance-toggle');
+      const checked = toggleEl.classList.contains('active');
 
       if (!amt || !cat) return alert("Missing info!");
 
@@ -343,7 +376,10 @@
       btn.innerText = "SAVE";
       document.getElementById('amt').value = "";
       document.getElementById('desc').value = "";
-      document.getElementById('check-bal').checked = false; 
+      
+      // Reset Toggle
+      toggleEl.classList.remove('active');
+      
       alert("Saved!");
       fetchData(); 
     }
