@@ -62,26 +62,24 @@
     }
     .save-btn:active { transform: scale(0.98); }
 
-    /* --- NEW CUSTOM IOS SWITCH --- */
+    /* SWITCH STYLE */
     .switch-wrapper {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 15px;
-      margin-top: 30px; /* More space */
+      margin-top: 30px; 
       cursor: pointer;
     }
-    
     .switch-bg {
       width: 55px;
       height: 32px;
-      background-color: #DDD; /* Gray when off */
+      background-color: #DDD;
       border-radius: 30px;
       position: relative;
       transition: background-color 0.3s ease;
-      border: 2px solid #000; /* Matches app style */
+      border: 2px solid #000;
     }
-
     .switch-circle {
       width: 26px;
       height: 26px;
@@ -94,21 +92,9 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       border: 1px solid #000;
     }
-
-    .switch-label {
-      font-size: 12px; 
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    /* Active State (Added by JS) */
-    .switch-wrapper.active .switch-bg {
-      background-color: var(--trend-green);
-    }
-    .switch-wrapper.active .switch-circle {
-      transform: translateX(23px);
-    }
-    /* ----------------------------- */
+    .switch-label { font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .switch-wrapper.active .switch-bg { background-color: var(--trend-green); }
+    .switch-wrapper.active .switch-circle { transform: translateX(23px); }
 
     /* NAV BAR */
     .nav-bar {
@@ -128,7 +114,6 @@
       box-sizing: border-box;
       backdrop-filter: blur(10px);
     }
-
     .nav-item {
       font-size: 9px;
       font-weight: 800;
@@ -148,6 +133,11 @@
     .screen.active { display: block; animation: fadeIn 0.3s; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+    /* SPACER FOR PROGRESS SCREEN */
+    #screen-progress {
+      padding-top: 40px; /* Added breathing room */
+    }
+
     /* HISTORY & CHARTS */
     .chart-row { margin-bottom: 15px; }
     .bar-container { display: flex; align-items: center; gap: 8px; }
@@ -155,10 +145,21 @@
     .bar-pink { background-color: #FF69B4; }
     .bar-green { background-color: var(--trend-green); }
     .bar-label { font-size: 11px; font-weight: 800; min-width: 80px; }
-    .bar-val { font-size: 11px; font-style: italic; }
+    .bar-val { font-size: 11px; font-style: italic; white-space: nowrap; }
 
     .month-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; user-select: none; }
     
+    /* DATE HEADER */
+    .date-header {
+      margin-top: 25px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: capitalize; /* Ensure it looks nice */
+      border-bottom: 2px solid #000;
+      padding-bottom: 5px;
+    }
+
     .history-item { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid #ccc; font-size: 13px; align-items: center; }
     .hist-amt { font-weight: 800; }
     .hist-desc { color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
@@ -256,11 +257,9 @@
       if(screenId === 'spending' && !document.getElementById('cat').value) fetchData();
     }
 
-    // --- NEW TOGGLE FUNCTION ---
     function toggleSwitch() {
       const el = document.getElementById('balance-toggle');
       el.classList.toggle('active');
-      // Minimal vibration for feedback if supported
       if(navigator.vibrate) navigator.vibrate(10);
     }
 
@@ -309,32 +308,47 @@
       document.getElementById('hist-month-label').innerText = appData.monthLabel;
       document.getElementById('trend-month-label').innerText = appData.monthLabel;
 
-      // History
+      // History with Date Headers
       const histDiv = document.getElementById('history-list');
       histDiv.innerHTML = "";
-      if(appData.history.length === 0) histDiv.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>No transactions</div>";
       
-      appData.history.forEach(t => {
-        const eyeIcon = (t.checkedBalance === true || t.checkedBalance === "true") ? "👁️ " : "";
-        histDiv.innerHTML += `
-          <div class="history-item">
-            <div class="hist-amt">$${t.amount}</div>
-            <div class="hist-desc">${eyeIcon} ${t.description}</div>
-            <div class="hist-cat">${t.category}</div>
-          </div>`;
-      });
+      if(appData.history.length === 0) {
+        histDiv.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>No transactions</div>";
+      } else {
+        let lastDate = "";
+        
+        appData.history.forEach(t => {
+          // If Date changed, insert Header
+          if (t.date !== lastDate) {
+            histDiv.innerHTML += `<div class="date-header">${t.date}</div>`;
+            lastDate = t.date;
+          }
+
+          const eyeIcon = (t.checkedBalance === true || t.checkedBalance === "true") ? "👁️ " : "";
+          histDiv.innerHTML += `
+            <div class="history-item">
+              <div class="hist-amt">$${t.amount}</div>
+              <div class="hist-desc">${eyeIcon} ${t.description}</div>
+              <div class="hist-cat">${t.category}</div>
+            </div>`;
+        });
+      }
 
       // Trends
       const trendsDiv = document.getElementById('trends-list');
       trendsDiv.innerHTML = "";
       const cats = Object.keys(appData.summary);
       if(cats.length === 0) trendsDiv.innerHTML = "<div style='text-align:center;padding:20px;color:#999'>No spending yet</div>";
+      
       let maxVal = 0;
       cats.forEach(c => maxVal = Math.max(maxVal, appData.summary[c]));
+      
       cats.forEach((c, i) => {
         const val = appData.summary[c];
-        const w = (val/maxVal)*100;
+        // FIX: Limit max width to 75% so the text (25%) never gets cut off
+        const w = (val/maxVal)*75; 
         const color = i%2===0 ? "bar-pink" : "bar-green";
+        
         trendsDiv.innerHTML += `
           <div class="chart-row">
             <div class="bar-label">${c}</div>
@@ -351,7 +365,6 @@
       const cat = document.getElementById('cat').value;
       const desc = document.getElementById('desc').value;
       
-      // READ CUSTOM TOGGLE STATE
       const toggleEl = document.getElementById('balance-toggle');
       const checked = toggleEl.classList.contains('active');
 
@@ -376,8 +389,6 @@
       btn.innerText = "SAVE";
       document.getElementById('amt').value = "";
       document.getElementById('desc').value = "";
-      
-      // Reset Toggle
       toggleEl.classList.remove('active');
       
       alert("Saved!");
